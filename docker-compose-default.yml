@@ -11,8 +11,8 @@ services:
     container_name: heimdall
     restart: unless-stopped
     environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
+      - PUID=1000
+      - PGID=1000
       - TZ=Asia/Shanghai
       - JAVA_OPTS=-Xms512m -Xmx512m
     volumes:
@@ -236,23 +236,3 @@ services:
     dns:
       - ${DOCKER_DNS}
 
-  nas-tools:
-    image: nastool/nas-tools:latest
-    container_name: nas-tools
-    ports:
-      - 60330:3000     
-    volumes:
-      - ${CONFIG_PATH}/nastool:/config  
-      - ${MEDIA_PATH}:/media/video
-    environment: 
-      - PUID=${PUID} 
-      - PGID=${PGID}   
-      - UMASK=000 
-      - NASTOOL_AUTO_UPDATE=false  
-      - NASTOOL_CN_UPDATE=false 
-    restart: unless-stopped
-    networks:
-      macvlan_proxy:
-        ipv4_address: 172.128.2.33
-    dns:
-      - ${DOCKER_DNS}
