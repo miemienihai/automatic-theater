@@ -1,28 +1,30 @@
-version: "3"
 networks:
-  network:
-    driver: bridge
+  macvlan_proxy:
+    enable_ipv6: true
     ipam:
       config:
-      - subnet: 172.128.2.0/24
-
+        - subnet: fc00:0:0:1::/64
+        - subnet: 172.128.2.0/24
 services:
   heimdall:
-    image: linuxserver/heimdall:2.5.6
+    image: lscr.io/linuxserver/heimdall:latest
     container_name: heimdall
     restart: unless-stopped
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=Asia/Shanghai
+      - JAVA_OPTS=-Xms512m -Xmx512m
     volumes:
       - ${CONFIG_PATH}/heimdall:/config
     ports:
+      - 61211:80
       - 60211:443
     networks:
-      network:
+      macvlan_proxy:
         ipv4_address: 172.128.2.11
-
+    dns:
+      - ${DOCKER_DNS}
   portainer:
     image: 6053537/portainer-ce:latest
     container_name: portainer
@@ -35,9 +37,11 @@ services:
     ports:
       - 60212:9000
     networks:
-      network:
+      macvlan_proxy:
         ipv4_address: 172.128.2.12
-
+    dns:
+      - ${DOCKER_DNS}
+      
   flaresolverr:
     image: flaresolverr/flaresolverr:latest
     container_name: flaresolverr
@@ -52,9 +56,11 @@ services:
     ports:
       - 60213:8191
     networks:
-      network:
+      macvlan_proxy:
         ipv4_address: 172.128.2.13
-
+    dns:
+      - ${DOCKER_DNS}
+      
   prowlarr:
     image: linuxserver/prowlarr:develop
     container_name: prowlarr
@@ -68,9 +74,11 @@ services:
     ports:
       - 60223:9696
     networks:
-      network:
+      macvlan_proxy:
         ipv4_address: 172.128.2.23
-
+    dns:
+      - ${DOCKER_DNS}
+      
   jproxy:
     image: luckypuppy514/jproxy:latest
     container_name: jproxy
@@ -79,15 +87,16 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - JAVA_OPTS=-Xms512m -Xmx512m
     volumes:
       - ${CONFIG_PATH}/jproxy/database:/app/database
     ports:
       - 60215:8117
     networks:
-      network:
+      macvlan_proxy:
         ipv4_address: 172.128.2.15
-
+    dns:
+      - ${DOCKER_DNS}
+      
   jellyseerr:
     image: fallenbagel/jellyseerr:latest
     container_name: jellyseerr
@@ -103,12 +112,14 @@ services:
     ports:
       - 60216:5055
     networks:
-      network:
+      macvlan_proxy:
         ipv4_address: 172.128.2.16
     depends_on:
       - sonarr
       - radarr
-
+    dns:
+      - ${DOCKER_DNS}
+      
   radarr:
     image: linuxserver/radarr:5.2.6
     container_name: radarr
@@ -123,12 +134,14 @@ services:
     ports:
       - 60217:7878
     networks:
-      network:
+      macvlan_proxy:
         ipv4_address: 172.128.2.17
     depends_on:
       - jproxy
       - qbittorrent
-
+    dns:
+      - ${DOCKER_DNS}
+      
   sonarr:
     image: linuxserver/sonarr:4.0.0
     container_name: sonarr
@@ -143,12 +156,14 @@ services:
     ports:
       - 60218:8989
     networks:
-      network:
+      macvlan_proxy:
         ipv4_address: 172.128.2.18
     depends_on:
       - jproxy
       - qbittorrent
-
+    dns:
+      - ${DOCKER_DNS}
+      
   qbittorrent:
     image: linuxserver/qbittorrent:latest
     container_name: qbittorrent
@@ -166,9 +181,12 @@ services:
       - 60881:6881
       - 60881:6881/udp
     networks:
-      network:
+      macvlan_proxy:
         ipv4_address: 172.128.2.19
-
+        ipv6_address: fc00:0:0:1::a
+    dns:
+      - ${DOCKER_DNS}
+      
   chinesesubfinder:
     image: allanpk716/chinesesubfinder:latest-lite
     container_name: chinesesubfinder
@@ -191,16 +209,18 @@ services:
         options:
           max-size: "100m"
     networks:
-      network:
+      macvlan_proxy:
         ipv4_address: 172.128.2.21
-
+    dns:
+      - ${DOCKER_DNS}
+      
   emby:
-    image: emby/embyserver:4.8.0.69
+    image:  lscr.io/linuxserver/emby:latest
     container_name: emby
     restart: unless-stopped
     environment:
-      - UID=0
-      - GID=0
+      - UID=${PUID}
+      - GID=${PGID}
       - GIDLIST=0
       - TZ=${TZ}
     volumes:
@@ -209,5 +229,30 @@ services:
     ports:
       - 60220:8096
     networks:
-      network:
+      macvlan_proxy:
         ipv4_address: 172.128.2.20
+    devices:
+      - /dev/dri:/dev/dri
+    dns:
+      - ${DOCKER_DNS}
+
+  nas-tools:
+    image: nastool/nas-tools:latest
+    container_name: nas-tools
+    ports:
+      - 60330:3000     
+    volumes:
+      - ${CONFIG_PATH}/nastool:/config  
+      - ${MEDIA_PATH}:/media/video
+    environment: 
+      - PUID=${PUID} 
+      - PGID=${PGID}   
+      - UMASK=000 
+      - NASTOOL_AUTO_UPDATE=false  
+      - NASTOOL_CN_UPDATE=false 
+    restart: unless-stopped
+    networks:
+      macvlan_proxy:
+        ipv4_address: 172.128.2.33
+    dns:
+      - ${DOCKER_DNS}
