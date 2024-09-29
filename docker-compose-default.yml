@@ -215,24 +215,23 @@ services:
       - ${DOCKER_DNS}
       
   emby:
-    image:  lscr.io/linuxserver/emby:latest
+    image:   emby/embyserver:latest
     container_name: emby
     restart: unless-stopped
     environment:
       - UID=${PUID}
       - GID=${PGID}
-      - GIDLIST=0
+      - GIDLIST=${PGID}
       - TZ=${TZ}
     volumes:
       - ${CONFIG_PATH}/emby:/config
       - ${MEDIA_PATH}:/media/video
     ports:
       - 60220:8096
+      - 63220:8920
     networks:
       macvlan_proxy:
         ipv4_address: 172.128.2.20
-    devices:
-      - /dev/dri:/dev/dri
     dns:
       - ${DOCKER_DNS}
 
