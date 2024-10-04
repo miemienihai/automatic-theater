@@ -242,6 +242,7 @@ graph LR
     1[Heimdall] == 4. 查看下载进度 ==> 5[qBittorrentee]
     1[Heimdall] == 5. 观看 ==> 6[Emby]
 ```
++ emby客户端使用问题,媒体库扫描不到文件,请将媒体库的目录先删除然后保存,重新添加目录即可扫描出来!
 
 [🌟 【Emby客户端】多平台免费优化版 🌟](https://kutt.lckp.top/jOPDvh)
 
